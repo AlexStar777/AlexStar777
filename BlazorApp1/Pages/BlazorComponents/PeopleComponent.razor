@@ -1,0 +1,98 @@
+﻿@page "/services/people"
+@*best practice is to match the path route(path )
+        to razor page || component name and paths
+    if need to create such component , choose add -> new item -> blazor component*@
+
+@using DataAccessService.Servcies
+@using DataAccessService.ViewModels
+@using BlazorApp1.ViewModels
+
+@inject IPeopleService _peoplesService
+
+<h2>People page</h2>
+<h4>Insert new Person</h4>
+<EditForm Model="@insertPersonVM" OnValidSubmit="@SavePerson">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText id="firstName" @bind-Value="@insertPersonVM.FirstName" />
+    <InputText id="lastName" @bind-Value="@insertPersonVM.LastName" />
+    <InputText id="emailAddress" @bind-Value="@insertPersonVM.EmailAddress" />
+
+    <button type="submit" id="save" class="btn btn-primary btn-success">Submit</button>
+</EditForm>
+
+<h3>People's list</h3>
+
+@if (peoplesVm == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>
+                    Id
+                </th>
+                <th>
+                    First Name
+                </th>
+                <th>
+                    Last Name
+                </th>
+                <th>
+                    Email Address
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var people in peoplesVm)
+            {
+                <tr>
+                    <td>
+                        @people.Id
+                    </td>
+                    <td>
+                        @people.FirstName
+                    </td>
+                    <td>
+                        @people.LastName
+                    </td>
+                    <td>
+                        @people.EmailAddress
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@*c# code init*@
+@code {
+
+    private List<PeopleViewModel>
+    peoplesVm;
+
+    private InsertPersonViewModel insertPersonVM = new InsertPersonViewModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        peoplesVm = await this._peoplesService.GetAllPeople();
+    }
+
+    private async Task SavePerson()
+    {
+        PeopleViewModel peopleVM = new PeopleViewModel
+        {
+            FirstName = insertPersonVM.FirstName,
+            LastName = insertPersonVM.LastName,
+            EmailAddress = insertPersonVM.EmailAddress
+        };
+
+        await this._peoplesService.CreatePerson(peopleVM);
+
+        //request for taking last(new) insertion
+        peoplesVm = await this._peoplesService.GetAllPeople();
+    }
+}
